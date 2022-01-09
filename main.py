@@ -33,6 +33,7 @@ def main():
 
 
 def test_dbus():
+    print('Testid dbus code')
     Defaults.Timeout = 25
     Defaults.Retries = 5
     client = ModbusClient('ipaddress.of.venus', port='502')
