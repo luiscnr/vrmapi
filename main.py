@@ -1,15 +1,19 @@
 from apimain import APIVRM
+from localacces import LocalGerbo
 import json
 import datetime
 
-from pymodbus.constants import Defaults
-from pymodbus.constants import Endian
-from pymodbus.client.sync import ModbusTcpClient as ModbusClient
-from pymodbus.payload import BinaryPayloadDecoder
+import argparse
+
+parser = argparse.ArgumentParser(description="Retrieve data from Cerbo CX")
+parser.add_argument("-d", "--debug", help="Debugging mode.", action="store_true")
+parser.add_argument("-v", "--verbose", help="Verbose mode.", action="store_true")
+parser.add_argument("-a", "--access", help="Access.", choices=['api', 'local'])
+args = parser.parse_args()
 
 
-def main():
-    print('STARTED')
+def main_api():
+    print('[API ACCESS]')
     amain = APIVRM()
     info = amain.get_info_installation('Garda')
 
@@ -22,7 +26,7 @@ def main():
                 if extra['idDataAttribute'] == 147:
                     current = extra['formattedValue']
 
-                #print(extra['idDataAttribute'], extra['description'], '->', extra['formattedValue'])
+                # print(extra['idDataAttribute'], extra['description'], '->', extra['formattedValue'])
         # else:
         #     print(key, '->', info[key])
 
@@ -37,22 +41,21 @@ def main():
     # print(len(diagnose))
     print('Time: ', info['current_time'])
     print('Last_Connection: ', datetime.datetime.fromtimestamp(info['last_timestamp']))
-    #print(extrainfo)
+    # print(extrainfo)
     print('Voltage->', voltage)
     print('Current->', current)
 
 
-def test_dbus():
-    print('Testid dbus code')
-    Defaults.Timeout = 25
-    Defaults.Retries = 5
-    client = ModbusClient('ipaddress.of.venus', port='502')
-    result = client.read_input_registers(840, 2)
-    decoder = BinaryPayloadDecoder.fromRegisters(result.registers, byteorder=Endian.Big)
-    voltage = decoder.decode_16bit_uint()
-    print("Battery voltage: {0:.2f}V".format(voltage / 10.0))
+def main_local():
+    localG = LocalGerbo()
+    voltage = localG.read_voltage()
+    if not voltage is None:
+        print("Battery voltage: {0:.2f}V".format(voltage / 10.0))
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    main()
+    if args.access == 'api':
+        main_api()
+    elif args.access == 'local':
+        main_local()
