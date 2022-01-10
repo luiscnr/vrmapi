@@ -17,19 +17,29 @@ def main():
         if key == 'extended':
             extrainfo = info[key]
             for extra in extrainfo:
-                print(extra['idDataAttribute'], extra['description'], '->', extra['formattedValue'])
-        else:
-            print(key, '->', info[key])
+                if extra['idDataAttribute'] == 143:
+                    voltage = extra['formattedValue']
+                if extra['idDataAttribute'] == 147:
+                    current = extra['formattedValue']
 
-    devices = amain.get_devices_installation(None, info['idSite'])
-    for device in devices:
-        print(device)
+                #print(extra['idDataAttribute'], extra['description'], '->', extra['formattedValue'])
+        # else:
+        #     print(key, '->', info[key])
 
-    diagnose = amain.get_diagnose_installation(None, info['idSite'])
-    for d in diagnose:
-        if d['description'] in ['Voltage', 'Current', 'Battery Power']:
-            print(d['description'], datetime.datetime.fromtimestamp(d['timestamp']), '->', d['formattedValue'])
-    print(len(diagnose))
+    # devices = amain.get_devices_installation(None, info['idSite'])
+    # for device in devices:
+    #     print(device)
+
+    # diagnose = amain.get_diagnose_installation(None, info['idSite'])
+    # for d in diagnose:
+    #     if d['description'] in ['Voltage', 'Current', 'Battery Power']:
+    #         print(d['description'], datetime.datetime.fromtimestamp(d['timestamp']), '->', d['formattedValue'])
+    # print(len(diagnose))
+    print('Time: ', info['current_time'])
+    print('Last_Connection: ', datetime.datetime.fromtimestamp(info['last_timestamp']))
+    #print(extrainfo)
+    print('Voltage->', voltage)
+    print('Current->', current)
 
 
 def test_dbus():

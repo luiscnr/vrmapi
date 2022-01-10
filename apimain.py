@@ -51,7 +51,6 @@ class APIVRM:
             return None
         url = f'{self.urlbase}installations/{idSite}/system-overview'
         response = requests.get(url, headers=self.auth_header)
-        print(response.json())
         if response.json()['success']:
             return response.json()['records']['devices']
         return None
