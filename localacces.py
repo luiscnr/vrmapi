@@ -2,7 +2,7 @@ from pymodbus.constants import Defaults
 from pymodbus.constants import Endian
 from pymodbus.client.sync import ModbusTcpClient as ModbusClient
 from pymodbus.payload import BinaryPayloadDecoder
-import pymodbus.exceptions
+from pymodbus.exceptions import ModbusIOException
 
 
 class LocalGerbo:
@@ -141,6 +141,7 @@ class LocalGerbo:
             '806': {'0': 'open', '1': 'close'},
             '807': {'0': 'open', '1': 'close'},
             '826': {'0': 'Not available', '1': 'Grid', '2': 'Generator', '3': 'Shore power', '240': 'Not connected'},
+            '844': {'0':'idle','1':'charging','2':'discharging'},
             '774': {'1': 'On', '4': 'Off'},
             '775': {'0': 'Off', '2': 'Fault', '3': 'Bulk', '4': 'Absorption', '5': 'Float', '6': 'Storage',
                     '7': 'Equalize', '11': 'Other(Hub - 1)', '252': 'External control'},
@@ -184,17 +185,17 @@ class LocalGerbo:
             val = decoder.decode_string(n)
         elif type == 'uint16':
             val = decoder.decode_16bit_uint()
-            val = val * scale
+            val = val / scale
         elif type == 'int16':
             val = decoder.decode_16bit_int()
-            val = val * scale
+            val = val / scale
 
         if unit == 'Options':
-            vals = str(val)
+            vals = f'{val:0.0f}'
             val = self.options[reg][vals]
 
         if unit == 'Errors':
-            vals = str(val)
+            vals = f'{val:0.0f}'
             val = self.errors[vals]
 
         return val
@@ -214,9 +215,9 @@ class LocalGerbo:
             if isinstance(result, ModbusIOException):
                 continue
             type = self.registers_system[reg]['type']
-            unit = self.registers_system[reg]['unit']
+            unit = self.registers_system[reg]['units']
             scale = 1
-            if self.registers_system[reg]['scale']:
+            if 'scale' in self.registers_system[reg].keys():
                 scale = float(self.registers_system[reg]['scale'])
             val = self.read_value(reg, result, type, scale, unit)
             desc = self.registers_system[reg]['description']
@@ -238,9 +239,9 @@ class LocalGerbo:
             if isinstance(result, ModbusIOException):
                 continue
             type = self.registers_solarcharger[reg]['type']
-            unit = self.registers_solarcharger[reg]['unit']
+            unit = self.registers_solarcharger[reg]['units']
             scale = 1
-            if self.registers_solarcharger[reg]['scale']:
+            if 'scale' in self.registers_solarcharger[reg].keys():
                 scale = float(self.registers_solarcharger[reg]['scale'])
             val = self.read_value(reg, result, type, scale, unit)
 

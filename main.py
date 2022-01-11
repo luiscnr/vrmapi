@@ -54,7 +54,7 @@ def main_local():
     dtnow = dt.utcnow().replace(second=0, microsecond=0)
     print('Reading values')
     all_values, col_names, col_values = localG.read_values()
-    if args.output - path:
+    if args.output-path:
         file_last, file_log = get_local_file_names(dtnow)
         print('Creating local file...')
         localG.create_last_file(file_last, dtnow, all_values)
@@ -69,10 +69,10 @@ def main_local():
 
 
 def get_local_file_names(dtnow):
-    file_last = os.path.join(args.output - path, 'VRMInfoLast.txt')
+    file_last = os.path.join(args.output-path, 'VRMInfoLast.txt')
     dtstr = dtnow.strftime('%Y%m%d')
     name_file = f'VRMLog_{dtstr}.csv'
-    file_log = os.path.join(args.output - path, name_file)
+    file_log = os.path.join(args.output-path, name_file)
     return file_last, file_log
 
 
