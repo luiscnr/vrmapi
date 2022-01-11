@@ -1,7 +1,9 @@
+import os.path
+
 from apimain import APIVRM
 from localacces import LocalGerbo
 import json
-import datetime
+from datetime import datetime as dt
 
 import argparse
 
@@ -9,6 +11,7 @@ parser = argparse.ArgumentParser(description="Retrieve data from Cerbo CX")
 parser.add_argument("-d", "--debug", help="Debugging mode.", action="store_true")
 parser.add_argument("-v", "--verbose", help="Verbose mode.", action="store_true")
 parser.add_argument("-a", "--access", help="Access.", choices=['api', 'local'])
+parser.add_argument("-p", "--output-path", help="Output path")
 args = parser.parse_args()
 
 
@@ -40,7 +43,7 @@ def main_api():
     #         print(d['description'], datetime.datetime.fromtimestamp(d['timestamp']), '->', d['formattedValue'])
     # print(len(diagnose))
     print('Time: ', info['current_time'])
-    print('Last_Connection: ', datetime.datetime.fromtimestamp(info['last_timestamp']))
+    print('Last_Connection: ', dt.fromtimestamp(info['last_timestamp']))
     # print(extrainfo)
     print('Voltage->', voltage)
     print('Current->', current)
@@ -48,9 +51,29 @@ def main_api():
 
 def main_local():
     localG = LocalGerbo()
-    voltage = localG.read_voltage()
-    if not voltage is None:
-        print("Battery voltage: {0:.2f}V".format(voltage / 10.0))
+    dtnow = dt.utcnow().replace(second=0, microsecond=0)
+    print('Reading values')
+    all_values, col_names, col_values = localG.read_values()
+    if args.output - path:
+        file_last, file_log = get_local_file_names(dtnow)
+        print('Creating local file...')
+        localG.create_last_file(file_last, dtnow, all_values)
+        col_values.insert(0,dtnow.strftime('%Y-%m-%d %H:%M'))
+        if not os.path.exists(file_log):
+            print('Start file log...')
+            col_names.insert(0,'Time Stamp [UTC]')
+            localG.start_file_log(file_log, dtnow, col_names, col_values)
+        else:
+            print('Append file log...')
+            localG.append_file_log(file_log, dtnow, col_values)
+
+
+def get_local_file_names(dtnow):
+    file_last = os.path.join(args.output - path, 'VRMInfoLast.txt')
+    dtstr = dtnow.strftime('%Y%m%d')
+    name_file = f'VRMLog_{dtstr}.csv'
+    file_log = os.path.join(args.output - path, name_file)
+    return file_last, file_log
 
 
 # Press the green button in the gutter to run the script.
