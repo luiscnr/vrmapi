@@ -3,7 +3,7 @@ from pymodbus.constants import Endian
 from pymodbus.client.sync import ModbusTcpClient as ModbusClient
 from pymodbus.payload import BinaryPayloadDecoder
 from pymodbus.exceptions import ModbusIOException
-
+import csv
 
 class LocalGerbo:
 
@@ -275,11 +275,11 @@ class LocalGerbo:
 
     def create_last_file(self,file_last, dtnow, all_values):
         with open(file_last,'w') as f:
-            writer = csv.write(f, delimiter=self.delimiter_last)
+            writer = csv.writer(f, delimiter=self.delimiter_last)
             row = ['Time stamp [UTC]',dtnow.strftime('%Y-%m-%d %H:%M')]
             writer.writerow(row)
             for reg in all_values:
                 ref = all_values[reg]['ref']
-                val = all_values[ref]['value']
+                val = all_values[reg]['value']
                 row = [f'[{reg}]{ref}',val]
                 writer.writerow(row)
