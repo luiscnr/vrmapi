@@ -53,7 +53,7 @@ def main_api():
 
 
 def main_local():
-    localG = LocalGerbo()
+    localG = LocalGerbo(True)
     dtnow = dt.utcnow().replace(second=0, microsecond=0)
     if args.verbose:
         print('Reading values')
@@ -93,7 +93,10 @@ def check_thersholds():
         return
     options = configparser.ConfigParser()
     options.read(args.config_th)
-    localG = LocalGerbo(False)
+    localG = LocalGerbo(True)
+    if not localG.connection:
+        print('-1')
+        return
 
     sections = ['UpThreshold', 'DownThreshold']
     output_res = '1'
@@ -108,7 +111,7 @@ def check_thersholds():
                         print(F'WARNING: Threshold: {ths} for param: {param} is not valid. Skipping....')
                         continue
                     reg = localG.params_th[param]
-                    #print(param, reg, th)
+                    # print(param, reg, th)
                     info, inputRegister = localG.get_info_reg(reg, True)
                     if info is not None and inputRegister is not None:
                         scale = 1
@@ -118,14 +121,14 @@ def check_thersholds():
                         if val is None:
                             output_res = '-1'
                         else:
-                            if section == 'UpThreshold' and val < th and output_res=='1':
+                            if section == 'UpThreshold' and val < th and output_res == '1':
                                 output_res = '0'
-                            if section == 'DownThreshold' and val > th and output_res=='1':
+                            if section == 'DownThreshold' and val > th and output_res == '1':
                                 output_res = '0'
                     else:
                         output_res = '-1'
 
-                    #print(info, inputRegister)
+                    # print(info, inputRegister)
 
     print(output_res)
     return

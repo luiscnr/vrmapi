@@ -17,7 +17,7 @@ class LocalGerbo:
         self.client = ModbusClient('10.42.0.136', port='502')
         if connect:
             self.connection = self.client.connect()
-            print(f'[Connection status: {self.connection}]')
+            #print(f'[Connection status: {self.connection}]')
         else:
             self.connection = False
 
