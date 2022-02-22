@@ -5,17 +5,21 @@ from pymodbus.payload import BinaryPayloadDecoder
 from pymodbus.exceptions import ModbusIOException
 import csv
 
+
 class LocalGerbo:
 
-    def __init__(self):
+    def __init__(self, connect):
         Defaults.Timeout = 25
         Defaults.Retries = 5
         self.delimiter = ';'
         self.delimiter_last = '='
 
         self.client = ModbusClient('10.42.0.136', port='502')
-        self.connection = self.client.connect()
-        print(f'[Connection status: {self.connection}]')
+        if connect:
+            self.connection = self.client.connect()
+            print(f'[Connection status: {self.connection}]')
+        else:
+            self.connection = False
 
         self.registers_system = {
             '800': {'include': True, 'description': 'Serial (System)', 'type': 'string[6]', 'units': ''},
@@ -141,7 +145,7 @@ class LocalGerbo:
             '806': {'0': 'open', '1': 'close'},
             '807': {'0': 'open', '1': 'close'},
             '826': {'0': 'Not available', '1': 'Grid', '2': 'Generator', '3': 'Shore power', '240': 'Not connected'},
-            '844': {'0':'idle','1':'charging','2':'discharging'},
+            '844': {'0': 'idle', '1': 'charging', '2': 'discharging'},
             '774': {'1': 'On', '4': 'Off'},
             '775': {'0': 'Off', '2': 'Fault', '3': 'Bulk', '4': 'Absorption', '5': 'Float', '6': 'Storage',
                     '7': 'Equalize', '11': 'Other(Hub - 1)', '252': 'External control'},
@@ -178,8 +182,21 @@ class LocalGerbo:
                 continue
             self.col_names_default.append(str(i))
 
+        self.params_th = {
+            'Battery Voltage (System)': '840',
+            'Battery Current (System)': '841',
+            'Battery Power (System)': '842',
+            'Battery Voltage': '771',
+            'Battery Current': '772',
+            'PV Voltage': '776',
+            'PV Current': '777',
+            'Charger state': '775'
+        }
+
     def read_value(self, reg, result, type, scale, unit):
         decoder = BinaryPayloadDecoder.fromRegisters(result.registers, byteorder=Endian.Big)
+        if not isinstance(decoder,BinaryPayloadDecoder):
+            return None
         if type.startswith('string'):
             n = int(type[type.index('[') + 1:type.index(']')])
             val = decoder.decode_string(n)
@@ -202,7 +219,7 @@ class LocalGerbo:
 
     def read_values(self):
         if not self.connection:
-            return
+            return None, None, None
 
         all_values = {}
         col_names = []
@@ -273,13 +290,48 @@ class LocalGerbo:
             # write the data
             writer.writerow(col_values)
 
-    def create_last_file(self,file_last, dtnow, all_values):
-        with open(file_last,'w') as f:
+    def create_last_file(self, file_last, dtnow, all_values):
+        with open(file_last, 'w') as f:
             writer = csv.writer(f, delimiter=self.delimiter_last)
-            row = ['Time stamp [UTC]',dtnow.strftime('%Y-%m-%d %H:%M')]
+            row = ['Time stamp [UTC]', dtnow.strftime('%Y-%m-%d %H:%M')]
             writer.writerow(row)
             for reg in all_values:
                 ref = all_values[reg]['ref']
                 val = all_values[reg]['value']
-                row = [f'[{reg}]{ref}',val]
+                row = [f'[{reg}]{ref}', val]
                 writer.writerow(row)
+
+    def get_info_reg(self, reg, retrieveInputRegister):
+        if isinstance(reg, str):
+            regs = reg
+        elif isinstance(reg, int):
+            regs = str(reg)
+        else:
+            return None
+        info = None
+        if regs in self.registers_system.keys():
+            info = self.registers_system[regs]
+        if regs in self.registers_solarcharger.keys():
+            info = self.registers_solarcharger[regs]
+        inputRegister = None
+        if retrieveInputRegister:
+            inputRegister = self.get_input_register(reg)
+
+        return info, inputRegister
+
+    def get_input_register(self, reg):
+        if not self.connection:
+            return None
+        if isinstance(reg, str):
+            regi = reg
+        elif isinstance(reg, int):
+            regi = reg
+        else:
+            return None
+
+        result = self.client.read_input_registers(regi, 1)
+
+        if isinstance(result, ModbusIOException):
+            return None
+        else:
+            return result
