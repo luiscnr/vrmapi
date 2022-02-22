@@ -17,7 +17,7 @@ class LocalGerbo:
         self.client = ModbusClient('10.42.0.136', port='502')
         if connect:
             self.connection = self.client.connect()
-            #print(f'[Connection status: {self.connection}]')
+            # print(f'[Connection status: {self.connection}]')
         else:
             self.connection = False
 
@@ -183,19 +183,43 @@ class LocalGerbo:
             self.col_names_default.append(str(i))
 
         self.params_th = {
-            'Battery Voltage (System)': '840',
-            'Battery Current (System)': '841',
-            'Battery Power (System)': '842',
-            'Battery Voltage': '771',
-            'Battery Current': '772',
-            'PV Voltage': '776',
-            'PV Current': '777',
-            'Charger state': '775'
+            'Battery Voltage (System)': {
+                'reg': '840',
+                'unit': None
+            },
+            'Battery Current (System)': {
+                'reg': '841',
+                'unit': None
+            },
+            'Battery Power (System)': {
+                'reg': '842',
+                'unit': None
+            },
+            'Battery Voltage': {
+                'reg': '771',
+                'unit': self.solarcharger_unit
+            },
+            'Battery Current': {
+                'reg': '772',
+                'unit': self.solarcharger_unit
+            },
+            'PV Voltage': {
+                'reg': '776',
+                'unit': self.solarcharger_unit
+            },
+            'PV Current': {
+                'reg': '777',
+                'unit': self.solarcharger_unit
+            },
+            'Charger state': {
+                'reg': '775',
+                'unit': self.solarcharger_unit
+            }
         }
 
     def read_value(self, reg, result, type, scale, unit):
         decoder = BinaryPayloadDecoder.fromRegisters(result.registers, byteorder=Endian.Big)
-        if not isinstance(decoder,BinaryPayloadDecoder):
+        if not isinstance(decoder, BinaryPayloadDecoder):
             return None
         if type.startswith('string'):
             n = int(type[type.index('[') + 1:type.index(']')])
@@ -301,7 +325,7 @@ class LocalGerbo:
                 row = [f'[{reg}]{ref}', val]
                 writer.writerow(row)
 
-    def get_info_reg(self, reg, retrieveInputRegister):
+    def get_info_reg(self, reg, unitv, retrieveInputRegister):
         if isinstance(reg, str):
             regs = reg
         elif isinstance(reg, int):
@@ -315,21 +339,24 @@ class LocalGerbo:
             info = self.registers_solarcharger[regs]
         inputRegister = None
         if retrieveInputRegister:
-            inputRegister = self.get_input_register(reg)
+            inputRegister = self.get_input_register(reg,unitv)
 
         return info, inputRegister
 
-    def get_input_register(self, reg):
+    def get_input_register(self, reg, unitv):
         if not self.connection:
             return None
         if isinstance(reg, str):
-            regi = reg
+            regi = int(reg)
         elif isinstance(reg, int):
             regi = reg
         else:
             return None
 
-        result = self.client.read_input_registers(regi, 1)
+        if unitv is None:
+            result = self.client.read_input_registers(regi, 1)
+        else:
+            result = self.client.read_input_registers(regi, 1, unit=unitv)
 
         if isinstance(result, ModbusIOException):
             return None

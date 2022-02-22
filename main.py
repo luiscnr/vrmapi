@@ -110,9 +110,9 @@ def check_thersholds():
                     except ValueError:
                         print(F'WARNING: Threshold: {ths} for param: {param} is not valid. Skipping....')
                         continue
-                    reg = localG.params_th[param]
+                    paramHere = localG.params_th[param]
                     # print(param, reg, th)
-                    info, inputRegister = localG.get_info_reg(reg, True)
+                    info, inputRegister = localG.get_info_reg(paramHere['reg'],paramHere['unit'],True)
                     if info is not None and inputRegister is not None:
                         scale = 1
                         if 'scale' in info.keys():
