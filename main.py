@@ -58,7 +58,10 @@ def main_local():
     dtnow = dt.utcnow().replace(second=0, microsecond=0)
     if args.verbose:
         print('Reading values')
-    all_values, col_names, col_values = localG.read_values()
+    seq_info = 'UNKNOWN'
+    if args.sequence_tag:
+        seq_info = args.sequence_tag
+    all_values, col_names, col_values = localG.read_values(seq_info)
     if all_values is None or col_names is None or col_values in None:
         print('[ERROR] Connection is not established...')
         return
@@ -68,15 +71,10 @@ def main_local():
             print('Creating local file...')
         localG.create_last_file(file_last, dtnow, all_values)
 
-        if args.sequence_tag:
-            col_values.insert(0, args.sequence_tag)
-
         col_values.insert(0, dtnow.strftime('%Y-%m-%d %H:%M'))
         if not os.path.exists(file_log):
             if args.verbose:
                 print('Start file log...')
-            if args.sequence_tag:
-                col_names.insert(0, 'SEQUENCE_INFO')
             col_names.insert(0, 'Time Stamp [UTC]')
             localG.start_file_log(file_log, col_names, col_values)
         else:

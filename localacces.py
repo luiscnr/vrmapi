@@ -241,13 +241,16 @@ class LocalGerbo:
 
         return val
 
-    def read_values(self):
+    def read_values(self,seq_info):
         if not self.connection:
             return None, None, None
 
         all_values = {}
         col_names = []
         col_values = []
+
+        col_names.append('SEQ_INFO')
+        col_values.append(seq_info)
 
         for reg in self.registers_system:
             if not self.registers_system[reg]['include']:
