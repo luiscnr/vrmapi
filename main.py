@@ -101,11 +101,11 @@ def check_thersholds():
         exit(4)
         return
     if args.verbose:
-        print(['[INFO]Reading configuration file...'])
+        print('[INFO]Reading configuration file...')
     options = configparser.ConfigParser()
     options.read(args.config_th)
     if args.verbose:
-        print(['[INFO]Connecting with Cerbo GX...'])
+        print('[INFO]Connecting with Cerbo GX...')
     localG = LocalGerbo(True)
     if not localG.connection:
         print('[ERROR] Connection with Cerbo GX is unavailable')
