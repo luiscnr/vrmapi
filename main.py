@@ -58,8 +58,9 @@ def main_local():
     if args.verbose:
         print('Reading values')
     all_values, col_names, col_values = localG.read_values()
-    if all_values is None or col_names is None or col_values:
+    if all_values is None or col_names is None or col_values in None:
         print('[ERROR] Connection is not established...')
+        return
     if args.path:
         file_last, file_log = get_local_file_names(dtnow)
         if args.verbose:
@@ -88,18 +89,26 @@ def get_local_file_names(dtnow):
 
 
 def check_thersholds():
+    if args.verbose:
+        print(['STARTED'])
     if not args.config_th:
-        print('-1')
+        print('[ERROR] Configuration file should be provided for option check_th')
+        exit(4)
         return
+    if args.verbose:
+        print(['[INFO]Reading configuration file...'])
     options = configparser.ConfigParser()
     options.read(args.config_th)
+    if args.verbose:
+        print(['[INFO]Connecting with Cerbo GX...'])
     localG = LocalGerbo(True)
     if not localG.connection:
-        print('-1')
+        print('[ERROR] Connection with Cerbo GX is unavailable')
+        exit(3)
         return
 
     sections = ['UpThreshold', 'DownThreshold']
-    output_res = '1'
+    output_res = 1
     for section in sections:
         if options.has_section(section):
             for param in localG.params_th:
@@ -108,29 +117,45 @@ def check_thersholds():
                     try:
                         th = float(ths.strip())
                     except ValueError:
-                        print(F'WARNING: Threshold: {ths} for param: {param} is not valid. Skipping....')
+                        print(F'[WARNING] Threshold: {ths} for param: {param} is not valid. Skipping....')
                         continue
                     paramHere = localG.params_th[param]
                     # print(param, reg, th)
-                    info, inputRegister = localG.get_info_reg(paramHere['reg'],paramHere['unit'],True)
+                    if args.verbose:
+                        print([f'[INFO] Reading value for param: {param}'])
+                    info, inputRegister = localG.get_info_reg(paramHere['reg'], paramHere['unit'], True)
                     if info is not None and inputRegister is not None:
                         scale = 1
                         if 'scale' in info.keys():
                             scale = float(info['scale'])
-                        val = localG.read_value(reg, inputRegister, info['type'], scale, info['units'])
+                        val = localG.read_value(paramHere['reg'], inputRegister, info['type'], scale, info['units'])
                         if val is None:
-                            output_res = '-1'
+                            print([f'[ERROR] Value for param {param} could not be read...'])
+                            output_res = -1
                         else:
-                            if section == 'UpThreshold' and val < th and output_res == '1':
-                                output_res = '0'
-                            if section == 'DownThreshold' and val > th and output_res == '1':
-                                output_res = '0'
+                            if args.verbose:
+                                print(f'[INFO] Param: {param} Value: {val} Threshold: {th} Type: {section}')
+                            if section == 'UpThreshold' and val < th and output_res == 1:
+                                output_res = 0
+                            if section == 'DownThreshold' and val > th and output_res == 1:
+                                output_res = 0
                     else:
-                        output_res = '-1'
+                        print([f'[ERROR] Value for param {param} could not be read...'])
+                        output_res = -1
 
                     # print(info, inputRegister)
 
-    print(output_res)
+    if output_res == -1:
+        exit(2)
+    elif output_res == 0:
+        if args.verbose:
+            print(f'[INFO] Cerbo CX readings show poor light conditions. Hypstar sequence cancelled')
+        exit(1)
+    elif output_res == 1:
+        if args.verbose:
+            print(f'[INFO] Cerbo CX readings show good light conditions. Starting Hypstar sequence...')
+        exit(0)
+
     return
 
 
