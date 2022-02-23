@@ -13,6 +13,7 @@ parser.add_argument("-v", "--verbose", help="Verbose mode.", action="store_true"
 parser.add_argument("-a", "--access", help="Access.", choices=['api', 'local', 'checkth'])
 parser.add_argument("-p", "--path", help="Output path.")
 parser.add_argument("-c", "--config_th", help="Configuration file for checking thresholds.")
+parser.add_argument("-seq", "--sequence_tag", help="Optional sequence tag for log file")
 args = parser.parse_args()
 
 
@@ -66,10 +67,16 @@ def main_local():
         if args.verbose:
             print('Creating local file...')
         localG.create_last_file(file_last, dtnow, all_values)
+
+        if args.sequence_tag:
+            col_values.insert(0, args.sequence_tag)
+
         col_values.insert(0, dtnow.strftime('%Y-%m-%d %H:%M'))
         if not os.path.exists(file_log):
             if args.verbose:
                 print('Start file log...')
+            if args.sequence_tag:
+                col_names.insert(0, 'SEQUENCE_INFO')
             col_names.insert(0, 'Time Stamp [UTC]')
             localG.start_file_log(file_log, col_names, col_values)
         else:
