@@ -176,10 +176,8 @@ class LocalGerbo:
             '34': 'Input current too high'
         }
 
-        self.col_names_default = ['840', '841', '842', '843', '844', '845', '846', '850', '851', '855', '860']
-        for i in range(771, 792):
-            if i == 781:
-                continue
+        self.col_names_default = ['840','841','842','850','851','771','772','775','776','777']
+        for i in range(784, 792):
             self.col_names_default.append(str(i))
 
         self.params_th = {
@@ -193,6 +191,14 @@ class LocalGerbo:
             },
             'Battery Power (System)': {
                 'reg': '842',
+                'unit': None
+            },
+            'PV-DC-couple power': {
+                'reg': '850',
+                'unit': None
+            },
+            'PV-DC-couple current': {
+                'reg': '851',
                 'unit': None
             },
             'Battery Voltage': {
@@ -211,8 +217,12 @@ class LocalGerbo:
                 'reg': '777',
                 'unit': self.solarcharger_unit
             },
-            'Charger state': {
-                'reg': '775',
+            'PV Power': {
+                'reg': '789',
+                'unit': self.solarcharger_unit
+            },
+            'User yield': {
+                'reg': '790',
                 'unit': self.solarcharger_unit
             }
         }
@@ -241,7 +251,7 @@ class LocalGerbo:
 
         return val
 
-    def read_values(self,seq_info):
+    def read_values(self, seq_info):
         if not self.connection:
             return None, None, None
 
@@ -322,7 +332,7 @@ class LocalGerbo:
             writer = csv.writer(f, delimiter=self.delimiter_last)
             row = ['Time stamp [UTC]', dtnow.strftime('%Y-%m-%d %H:%M')]
             writer.writerow(row)
-            for reg in all_values:
+            for reg in self.col_names_default:
                 ref = all_values[reg]['ref']
                 val = all_values[reg]['value']
                 row = [f'[{reg}]{ref}', val]
@@ -342,7 +352,7 @@ class LocalGerbo:
             info = self.registers_solarcharger[regs]
         inputRegister = None
         if retrieveInputRegister:
-            inputRegister = self.get_input_register(reg,unitv)
+            inputRegister = self.get_input_register(reg, unitv)
 
         return info, inputRegister
 
