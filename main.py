@@ -62,7 +62,7 @@ def main_local():
     if args.sequence_tag:
         seq_info = args.sequence_tag
     all_values, col_names, col_values = localG.read_values(seq_info)
-    if all_values is None or col_names is None or col_values in None:
+    if all_values is None or col_names is None or col_values is None:
         print('[ERROR] Connection is not established...')
         return
     if args.path:
@@ -95,7 +95,7 @@ def get_local_file_names(dtnow):
 
 def check_thersholds():
     if args.verbose:
-        print(['STARTED'])
+        print('[STARTED]')
     if not args.config_th:
         print('[ERROR] Configuration file should be provided for option check_th')
         exit(4)
@@ -122,12 +122,12 @@ def check_thersholds():
                     try:
                         th = float(ths.strip())
                     except ValueError:
-                        print(F'[WARNING] Threshold: {ths} for param: {param} is not valid. Skipping....')
+                        print(f'[WARNING] Threshold: {ths} for param: {param} is not valid. Skipping....')
                         continue
                     paramHere = localG.params_th[param]
                     # print(param, reg, th)
-                    if args.verbose:
-                        print([f'[INFO] Reading value for param: {param}'])
+                    # if args.verbose:
+                    #     print(f'[INFO] Reading value for param: {param}')
                     info, inputRegister = localG.get_info_reg(paramHere['reg'], paramHere['unit'], True)
                     if info is not None and inputRegister is not None:
                         scale = 1
@@ -135,7 +135,7 @@ def check_thersholds():
                             scale = float(info['scale'])
                         val = localG.read_value(paramHere['reg'], inputRegister, info['type'], scale, info['units'])
                         if val is None:
-                            print([f'[ERROR] Value for param {param} could not be read...'])
+                            print(f'[ERROR] Value for param {param} could not be read...')
                             output_res = -1
                         else:
                             if args.verbose:
@@ -145,7 +145,7 @@ def check_thersholds():
                             if section == 'DownThreshold' and val > th and output_res == 1:
                                 output_res = 0
                     else:
-                        print([f'[ERROR] Value for param {param} could not be read...'])
+                        print(f'[ERROR] Value for param {param} could not be read...')
                         output_res = -1
 
                     # print(info, inputRegister)

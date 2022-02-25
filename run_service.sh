@@ -166,6 +166,7 @@ fi
 exit_actions() {
     return_value=$?
     if [ $return_value -eq 0 ] ; then
+        python /home/hypernets/TEST/vrmapi/main.py -a local -p /home/hypernets/TEST/vrmapi/log -seq END -v 	    
         echo "[INFO]  Success"
     else
     	echo "[INFO]  Hysptar scheduled job exited with code $return_value";
@@ -193,9 +194,11 @@ python3 main.py -a checkth -c config_th.ini
 pv_status=$?
 if [ $pv_status -gt 0 ] ; then
        echo "[INFO] Cerbo GX readings show poor light conditions. Exiting without starting sequence"
+       python /home/hypernets/TEST/vrmapi/main.py -a local -p /home/hypernets/TEST/vrmapi/log -seq NOSEQ -v 
        #shutdown_sequence
 else   
        echo "[INFO] Cerbo GX reading show good light conditions. Starting sequence..."
        #trap "exit_actions" EXIT
+       #python3 /home/hypernets/TEST/vrmapi/main.py -a local -p /home/hypernets/TEST/vrmapi/log -seq START -v 
        #python3 -m hypernets.open_sequence -f $sequence_file $extra_args
 fi
