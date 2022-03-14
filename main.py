@@ -10,7 +10,7 @@ import configparser
 
 parser = argparse.ArgumentParser(description="Retrieve data from Cerbo CX")
 parser.add_argument("-v", "--verbose", help="Verbose mode.", action="store_true")
-parser.add_argument("-a", "--access", help="Access.", choices=['api', 'local', 'checkth'])
+parser.add_argument("-a", "--access", help="Access.", choices=['api', 'local', 'checkth','copyseq'])
 parser.add_argument("-p", "--path", help="Output path.")
 parser.add_argument("-c", "--config_th", help="Configuration file for checking thresholds.")
 parser.add_argument("-seq", "--sequence_tag", help="Optional sequence tag for log file")
@@ -163,6 +163,9 @@ def check_thersholds():
 
     return
 
+def copy_sequence():
+    cmd = 'scp hypernets@$(ssh - p 9022 hypstar@enhydra.naturalsciences.be "cat /home/hypstar/GAIT/GAIT_ip_address"):/home/hypernets_tools/DATA'
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -172,3 +175,5 @@ if __name__ == '__main__':
         main_local()
     elif args.access == 'checkth':
         check_thersholds()
+    elif args.access == 'copycheck':
+        copy_sequence()
